@@ -1,0 +1,11 @@
+Eves_QoL.RestoreSelection:
+    Heading: "Eves_QoL"
+    DefaultBinding:
+        Options:
+            - N
+
+Eves_QoL.SelectLine:
+    Heading: "Eves_QoL"
+    DefaultBinding:
+        Options:
+            - M

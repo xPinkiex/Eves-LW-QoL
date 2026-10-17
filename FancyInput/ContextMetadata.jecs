@@ -1,0 +1,6 @@
+Eves_QoL.ReSelect:
+    InjectTriggersInto:
+        - MHG.BuildActions
+    Triggers:
+        - Eves_QoL.RestoreSelection
+        - Eves_QoL.SelectLine

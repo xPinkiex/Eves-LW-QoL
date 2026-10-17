@@ -1,0 +1,46 @@
+## Eclipse
+*.pydevproject
+.project
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+
+## Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+## Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.dll
+*.pdb
+*.exe
+
+## MonoDevelop / Xamarin Studio
+*.userprefs
+*.swp
+
+## JetBrains (Rider, ReSharper)
+.idea/
+*.DotSettings.user
+
+## OS files
+.DS_Store
+Thumbs.db
+
+## Logic World build artifacts
+cache/
+*.cache
