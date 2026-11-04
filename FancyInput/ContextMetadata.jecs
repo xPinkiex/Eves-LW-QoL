@@ -4,3 +4,4 @@ Eves_QoL.ReSelect:
     Triggers:
         - Eves_QoL.RestoreSelection
         - Eves_QoL.SelectLine
+        - Eves_QoL.FreezeWires

@@ -9,3 +9,9 @@ Eves_QoL.SelectLine:
     DefaultBinding:
         Options:
             - M
+
+Eves_QoL.FreezeWires:
+    Heading: "Eves_QoL"
+    DefaultBinding:
+        Options:
+            - F7

@@ -24,6 +24,11 @@ namespace Eves_QoL.Client
 				LineSelector.TryStartLineSelect
 			);
 
+			FirstPersonInteraction.RegisterBuildingKeybinding(
+				ReSelectTriggers.FreezeWires,
+				WireUpdateThrottle.ToggleFreeze
+			);
+
 			new Harmony("Eves_QoL").PatchAll();
 		}
 
