@@ -6,5 +6,6 @@ namespace Eves_QoL.Client.Inputs
 		RestoreSelection,
 		SelectLine,
 		FreezeWires,
+		FreezeAll,
 	}
 }

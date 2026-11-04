@@ -15,3 +15,9 @@ Eves_QoL.FreezeWires:
     DefaultBinding:
         Options:
             - F7
+
+Eves_QoL.FreezeAll:
+    Heading: "Eves_QoL"
+    DefaultBinding:
+        Options:
+            - F5

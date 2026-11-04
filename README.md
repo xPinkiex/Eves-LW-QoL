@@ -11,11 +11,13 @@ Re-selects the last group of components you moved, cloned, rotated, or flipped. 
 Selects a line of same-type components. Press while looking at the first component, then press again while looking at the last component. Automatically expands past both anchors to grab the full run of evenly-spaced components.
 
 ### Freeze / Throttle Wire Updates
-At high simulation speeds the client spends a lot of frame time recoloring wires and pegs and updating components. Freezing stops all of that while the circuit keeps running on the server; unfreezing applies the latest state of every changed wire at once.
+At high simulation speeds the client spends a lot of frame time recoloring wires and pegs. The circuit keeps running on the server in every mode.
 
-If the server also runs Eve's QoL (always true in singleplayer), freezing tells the server to stop sending circuit state packets entirely while every connected player is frozen. The server keeps track of what changed, so the first packet after unfreezing catches everything up. On servers without the mod, or when other players aren't frozen, packets still arrive and are buffered on your side instead.
+- **Freeze wire visuals (F7):** wires and pegs stop changing color, but displays and other components keep updating, so you can still watch screens. Unfreezing recolors every changed wire at once.
+- **Freeze all circuit visuals (F5):** nothing updates. If the server also runs Eve's QoL (always true in singleplayer), it stops sending circuit state packets entirely while every connected player is fully frozen; the first packet after unfreezing catches everything up. On servers without the mod, or when other players aren't frozen, packets are buffered on your side instead.
+- **`EvesQoL.WireUpdateInterval <ms>`** (console): recolor wires at most once every N milliseconds. Displays are unaffected. `0` = every frame, the default.
 
-For a middle ground, `EvesQoL.WireUpdateInterval <ms>` in the console applies updates at most once every N milliseconds (`0` = every frame, the default). `EvesQoL.FreezeWires` toggles freezing from the console.
+`EvesQoL.FreezeWires` and `EvesQoL.FreezeAll` toggle the freezes from the console.
 
 ## Keybinds
 
@@ -23,7 +25,8 @@ For a middle ground, `EvesQoL.WireUpdateInterval <ms>` in the console applies up
 |---|---|
 | **N** | Restore last selection |
 | **M** | Select components in line |
-| **F7** | Freeze / unfreeze wire updates |
+| **F7** | Freeze / unfreeze wire visuals (displays keep updating) |
+| **F5** | Freeze / unfreeze all circuit visuals |
 
 All keybinds are rebindable in the controls settings menu.
 

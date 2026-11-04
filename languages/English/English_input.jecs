@@ -14,8 +14,16 @@ FancyInput.Trigger.Eves_QoL.SelectLine.Description: """
     Automatically expands past both anchors to grab the full run of evenly-spaced components.
     """
 
-FancyInput.Trigger.Eves_QoL.FreezeWires: "Freeze wire updates"
+FancyInput.Trigger.Eves_QoL.FreezeWires: "Freeze wire visuals"
 FancyInput.Trigger.Eves_QoL.FreezeWires.Description: """
-    Stops wires, pegs and components from visually updating while the circuit keeps running.
-    Saves a lot of frame time at high simulation speeds. Press again to resume and catch up.
+    Stops wires and pegs from changing color while the circuit keeps running.
+    Displays and other components still update. Saves a lot of frame time at high simulation speeds.
+    Press again to resume and catch up.
+    """
+
+FancyInput.Trigger.Eves_QoL.FreezeAll: "Freeze all circuit visuals"
+FancyInput.Trigger.Eves_QoL.FreezeAll.Description: """
+    Stops wires, pegs, displays and all other components from updating while the circuit keeps running.
+    If the server has Eve's QoL, it stops sending circuit state packets entirely.
+    Press again to resume and catch up.
     """

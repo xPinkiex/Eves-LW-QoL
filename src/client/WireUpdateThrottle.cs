@@ -11,69 +11,86 @@ using LogicWorld.SharedCode.Networking;
 
 namespace Eves_QoL.Client
 {
-	// Buffers incoming circuit state updates so the client does less work
-	// recoloring wires/pegs and updating components at high simulation speeds.
-	//  - Frozen: nothing is applied until unfrozen, then everything is applied at once.
-	//  - Interval > 0: buffered states are applied at most once per interval.
-	// Only the newest state per circuit index is kept, so memory stays bounded.
+	// Two ways to cut client-side work at high simulation speeds:
+	//
+	//  - Wire freeze (F7): circuit states are still received and applied, so displays
+	//    and other components keep updating. Only the per-frame wire/peg recolor step is
+	//    skipped. The game's own recolor buffer keeps collecting changed indexes
+	//    (deduplicated), so unfreezing recolors everything in one frame.
+	//    WireUpdateInterval throttles that same step instead of skipping it.
+	//
+	//  - Full freeze (F5): nothing updates. If the server runs Eves_QoL it stops sending
+	//    state packets entirely; otherwise packets are buffered here (newest state per
+	//    index) and applied on unfreeze.
 	public static class WireUpdateThrottle
 	{
-		public static bool Frozen { get; private set; }
+		public static bool WiresFrozen { get; private set; }
 
-		// 0 = apply every frame (vanilla behaviour).
+		public static bool FullyFrozen { get; private set; }
+
+		// 0 = recolor wires every frame (vanilla behaviour).
 		public static int IntervalMs { get; private set; }
 
 		private static readonly Dictionary<int, bool> Pending = new Dictionary<int, bool>();
-		private static readonly Stopwatch SinceFlush = Stopwatch.StartNew();
+		private static readonly Stopwatch SinceRecolor = Stopwatch.StartNew();
 		private static IClientWorld bufferedWorld;
 
-		private static bool Buffering => Frozen || IntervalMs > 0;
-
-		public static bool ToggleFreeze()
+		public static bool ToggleWireFreeze()
 		{
-			Frozen = !Frozen;
-			LConsole.WriteLine(Frozen
-				? "[Eves_QoL] Wire updates frozen (circuit keeps running)."
-				: "[Eves_QoL] Wire updates resumed.");
+			WiresFrozen = !WiresFrozen;
+			LConsole.WriteLine(WiresFrozen
+				? "[Eves_QoL] Wire visuals frozen (displays still update)."
+				: "[Eves_QoL] Wire visuals resumed.");
+			return true;
+		}
+
+		public static bool ToggleFullFreeze()
+		{
+			FullyFrozen = !FullyFrozen;
+			LConsole.WriteLine(FullyFrozen
+				? "[Eves_QoL] All circuit visuals frozen (circuit keeps running)."
+				: "[Eves_QoL] All circuit visuals resumed.");
 			SendFreezeToServer();
-			if (!Frozen)
+			if (!FullyFrozen)
 			{
 				Flush();
 			}
 			return true;
 		}
 
-		// If the server also runs Eves_QoL, ask it to stop sending state packets entirely.
+		[Command("EvesQoL.FreezeWires", Description = "Toggle freezing wire/peg colors. Displays and other components keep updating.")]
+		public static void FreezeWiresCommand()
+		{
+			ToggleWireFreeze();
+		}
+
+		[Command("EvesQoL.FreezeAll", Description = "Toggle freezing all circuit visuals, including displays. Stops state packets if the server has Eves_QoL.")]
+		public static void FreezeAllCommand()
+		{
+			ToggleFullFreeze();
+		}
+
+		[Command("EvesQoL.WireUpdateInterval", Description = "Recolor wires/pegs at most once every N milliseconds. Displays are unaffected. 0 = every frame (default).")]
+		public static void SetInterval(int milliseconds)
+		{
+			IntervalMs = milliseconds < 0 ? 0 : milliseconds;
+			LConsole.WriteLine($"[Eves_QoL] Wire update interval set to {IntervalMs} ms.");
+		}
+
+		// If the server also runs Eves_QoL, ask it to stop/resume sending state packets.
 		private static void SendFreezeToServer()
 		{
 			if (Instances.MainWorld == null || !PacketManager.TryGetCodeFromType(typeof(WireFreezeRequest), out ushort _))
 			{
 				return;
 			}
-			Instances.SendData.Send(new WireFreezeRequest { Frozen = Frozen });
-		}
-
-		[Command("EvesQoL.WireUpdateInterval", Description = "Apply wire/peg state updates at most once every N milliseconds. 0 = every frame (default).")]
-		public static void SetInterval(int milliseconds)
-		{
-			IntervalMs = milliseconds < 0 ? 0 : milliseconds;
-			LConsole.WriteLine($"[Eves_QoL] Wire update interval set to {IntervalMs} ms.");
-			if (IntervalMs == 0 && !Frozen)
-			{
-				Flush();
-			}
-		}
-
-		[Command("EvesQoL.FreezeWires", Description = "Toggle freezing of wire/peg/component state visuals.")]
-		public static void FreezeCommand()
-		{
-			ToggleFreeze();
+			Instances.SendData.Send(new WireFreezeRequest { Frozen = FullyFrozen });
 		}
 
 		// Returns true if the packet was swallowed into the buffer.
 		internal static bool TryBuffer(CircuitStatesUpdatePacket packet)
 		{
-			if (!Buffering)
+			if (!FullyFrozen)
 			{
 				return false;
 			}
@@ -81,14 +98,11 @@ namespace Eves_QoL.Client
 			var world = Instances.MainWorld;
 			if (world != bufferedWorld)
 			{
-				// Joined a different world while buffering: old states are meaningless.
+				// Joined a different world while frozen: old states are meaningless.
 				Pending.Clear();
 				bufferedWorld = world;
 				// New connection: the server doesn't know we're frozen yet.
-				if (Frozen)
-				{
-					SendFreezeToServer();
-				}
+				SendFreezeToServer();
 			}
 
 			var updates = packet.Updates;
@@ -99,23 +113,26 @@ namespace Eves_QoL.Client
 			return true;
 		}
 
-		// Called once per frame, right before the game processes its color buffer.
-		internal static void FrameTick()
+		// Decides whether the game's per-frame wire recolor step runs this frame.
+		internal static bool ShouldRecolorThisFrame()
 		{
-			if (Frozen || Pending.Count == 0)
+			if (WiresFrozen || FullyFrozen)
 			{
-				return;
+				return false;
 			}
-			if (IntervalMs > 0 && SinceFlush.ElapsedMilliseconds < IntervalMs)
+			if (IntervalMs > 0)
 			{
-				return;
+				if (SinceRecolor.ElapsedMilliseconds < IntervalMs)
+				{
+					return false;
+				}
+				SinceRecolor.Restart();
 			}
-			Flush();
+			return true;
 		}
 
 		private static void Flush()
 		{
-			SinceFlush.Restart();
 			if (Pending.Count == 0)
 			{
 				return;
@@ -144,6 +161,7 @@ namespace Eves_QoL.Client
 	}
 
 	// CircuitStatesManager is internal, so target it by name.
+	// Skipping this leaves the game's recolor buffer intact; it is processed on a later frame.
 	[HarmonyPatch]
 	public static class ColorBufferFramePatch
 	{
@@ -155,9 +173,9 @@ namespace Eves_QoL.Client
 			);
 		}
 
-		public static void Prefix()
+		public static bool Prefix()
 		{
-			WireUpdateThrottle.FrameTick();
+			return WireUpdateThrottle.ShouldRecolorThisFrame();
 		}
 	}
 }

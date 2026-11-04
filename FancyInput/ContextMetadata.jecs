@@ -5,3 +5,4 @@ Eves_QoL.ReSelect:
         - Eves_QoL.RestoreSelection
         - Eves_QoL.SelectLine
         - Eves_QoL.FreezeWires
+        - Eves_QoL.FreezeAll

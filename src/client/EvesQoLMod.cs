@@ -26,7 +26,12 @@ namespace Eves_QoL.Client
 
 			FirstPersonInteraction.RegisterBuildingKeybinding(
 				ReSelectTriggers.FreezeWires,
-				WireUpdateThrottle.ToggleFreeze
+				WireUpdateThrottle.ToggleWireFreeze
+			);
+
+			FirstPersonInteraction.RegisterBuildingKeybinding(
+				ReSelectTriggers.FreezeAll,
+				WireUpdateThrottle.ToggleFullFreeze
 			);
 
 			new Harmony("Eves_QoL").PatchAll();
