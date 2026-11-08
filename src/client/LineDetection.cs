@@ -25,8 +25,13 @@ namespace Eves_QoL.Client
 			}
 
 			var type = compA.Data.Type;
-			var start = compA.WorldPosition;
-			var end = compB.WorldPosition;
+			// The rays go through the components' middles. Their WorldPosition is
+			// the origin on the surface they stand on: a ray along that line grazes
+			// the board and the components' bottom faces, and whether a grazing ray
+			// counts as a hit depends on rounding (and so on the direction), or it
+			// hits the board itself, a different type: the walk stopped early.
+			var start = Center(anchorA, compA.WorldPosition);
+			var end = Center(anchorB, compB.WorldPosition);
 			var dir = (end - start).normalized;
 
 			var result = new HashSet<ComponentAddress> { anchorA, anchorB };
@@ -136,6 +141,23 @@ namespace Eves_QoL.Client
 					return;
 				}
 			}
+		}
+
+		// The middle of a component: the centre of its colliders' bounds (the
+		// component's own, not its children's), or `fallback` without colliders.
+		private static Vector3 Center(ComponentAddress address, Vector3 fallback)
+		{
+			var colliders = Instances.MainWorld.Renderer.EntityColliders.GetCollidersOfComponent(address, false);
+			if (colliders == null || colliders.Count == 0)
+			{
+				return fallback;
+			}
+			var bounds = colliders[0].bounds;
+			for (int i = 1; i < colliders.Count; i++)
+			{
+				bounds.Encapsulate(colliders[i].bounds);
+			}
+			return bounds.center;
 		}
 
 		// Adapted from CWPHelper.findNextPeg (CWPHelper.cs:68-89).

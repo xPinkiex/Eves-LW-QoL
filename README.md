@@ -8,7 +8,7 @@ Quality-of-life features for building in Logic World.
 Re-selects the last group of components you moved, cloned, rotated, or flipped. Press while building to jump back into multi-selection with those components. Does not remember deleted components.
 
 ### Select Line
-Selects a line of same-type components. Press while looking at the first component, then press again while looking at the last component. Automatically expands past both anchors to grab the full run of evenly-spaced components.
+Selects a line of same-type components. Press while looking at the first component, then press again while looking at the last component. Automatically expands past the second component, in the direction from the first to the second, to grab the full run of evenly-spaced components.
 
 ### Freeze / Throttle Wire Updates
 At high simulation speeds the client spends a lot of frame time recoloring wires and pegs. The circuit keeps running on the server in every mode.
